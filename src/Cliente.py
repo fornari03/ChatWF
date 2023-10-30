@@ -1,49 +1,39 @@
 from socket import *
 
-# infos do servidor
-SERVER_ADDRESS = ""
-SERVER_PORT = 5050
-IRC_PORT = 194
-# server = gethostbyname(gethostname()) : pega o ip do computador
-# para abrir a conexão com o servidor -> fsockopen() ?
+class Cliente:
 
+    def __init__(self, address):
+        # a porta eh constante
+        self.SERVER_PORT = 6667
+        self._cliente = socket(AF_INET, SOCK_STREAM)
+        self._cliente.connect((address, self.SERVER_PORT))
 
+    # conecta com o servidor utilizando o usuario e o nick fornecido, e verifica se o nickname eh valido
+    def autenticar(self, nickname, nomeReal, modo: int):
+        self._cliente.send("PASS redesGrupoAfp")
+        self._cliente.send(f"NICK {nickname}\r\n".encode("utf-8"))
 
-# infos do cliente
-nickname = "fulaninhogameplays12"
-user = "fulaninhogameplays12"
-canais = [] # uma lista de canais talvez
+        # verificacao pra ver se o nickname eh valido
+        
 
+        self._cliente.send(f"USER {nickname} {modo} * :{nomeReal}\r\n".encode("utf-8"))
 
+    def entrar_canal(canal):
+        cliente.send(f"JOIN {canal}\r\n".encode("utf-8"))
 
-# funcoes criadas para facilitar o uso
-def autenticar():
-    cliente.send(f"USER {user}\r\n".encode("utf-8"))
-    cliente.send(f"NICK {nickname}\r\n".encode("utf-8"))
+    def enviar_msg(msg, canal):
+        cliente.send(f"PRIVMSG {canal}:{msg}\r\n".encode("utf-8"))
 
-def entrar_canal(canal):
-    cliente.send(f"JOIN {canal}\r\n".encode("utf-8"))
+    autenticar()
+        
+    entrar_canal(input("Nome do canal para entrar: "))
 
-def enviar_msg(msg, canal):
-    cliente.send(f"PRIVMSG {canal}:{msg}\r\n".encode("utf-8"))
+    while (True):
+        msg = cliente.recv(1500).decode("utf-8")
 
+        if (msg.find("PING") != -1): # -1 é erro
+            string = "ping\r\n".encode("utf-8")
+            cliente.send(f"PONG :{string}")
 
-cliente = socket(AF_INET, SOCK_STREAM)
-# endereço será (host + porta)
-
-cliente.connect((SERVER_ADDRESS, SERVER_PORT))
-
-autenticar()
-    
-entrar_canal(input("Nome do canal para entrar: "))
-
-while (True):
-    msg = cliente.recv(1500).decode("utf-8")
-
-    if (msg.find("PING") != -1): # -1 é erro
-        string = "ping\r\n".encode("utf-8")
-        cliente.send(f"PONG :{string}")
-
-        if (msg.split()[0] == ""):
-
-    
+            if (msg.split()[0] == ""):
+                pass
