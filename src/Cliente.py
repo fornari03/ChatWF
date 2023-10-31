@@ -49,7 +49,30 @@ class Cliente:
                     return "nickError"
             except:
                 pass
+        elif ans.find("433") != -1 or ans.find("432") != -1 or ans.find("434") != -1 or ans.find("437") != -1:
+            self._cliente.close()
+            self.open = False
+            return "nickError"
         else:
             self._cliente.close()
             self.open = False
             return "semBurstWelcome"
+
+    def getMessages(self):
+        self._cliente.setblocking(False)
+        try:
+            ans = self._cliente.recv(512).decode()
+            while ans[-2:] != "\r\n":
+                ans += self._cliente.recv(512).decode()
+            return ans.split("\r\n")
+        except:
+            return []
+
+    def getChannelList(self):
+        #TODO, lista de canais tava dando problema nos testes que o utf-8 n tava decodificando direito
+        pass
+
+    def quit(self):
+        self._cliente.send("QUIT\r\n".encode())
+        self._cliente.close()
+        self.open = False
