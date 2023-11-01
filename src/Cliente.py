@@ -9,6 +9,7 @@ class Cliente:
         # a porta eh constante
         self.SERVER_PORT = 6667
         self._cliente = socket(AF_INET, SOCK_STREAM)
+        self._server = address
         try:
             self._cliente.connect((address, self.SERVER_PORT))
             self.open = True
@@ -17,6 +18,7 @@ class Cliente:
 
     # conecta com o servidor utilizando o usuario e o nick fornecido, e verifica se o nickname eh valido
     def autenticar(self, senha, nickname, nomeReal, modo: int):
+        self.nickname = nickname
         # tem que fazer ainda o try catch do timeoutError
         self._cliente.send(f"PASS {senha}\r\n".encode())
         self._cliente.send(f"NICK {nickname}\r\n".encode())
@@ -58,6 +60,7 @@ class Cliente:
             self.open = False
             return "semBurstWelcome"
 
+    # implementacao ruim, eh bom a gente ver as mensagens e analisar uma a uma no objeto, e tbm a posicao do try ta ruim
     def getMessages(self):
         self._cliente.setblocking(False)
         try:
@@ -69,8 +72,56 @@ class Cliente:
             return []
 
     def getChannelList(self):
-        #TODO, lista de canais tava dando problema nos testes que o utf-8 n tava decodificando direito
-        pass
+        # tem que arrumar esse codigo ainda, acho que eh bom mexer em algumas coisas, como botar em uma lista
+        # e tbm a gente so retorna os canais que seu nome e descricao podem ser decodificados pra utf-8
+        mensagens = []
+        canais = []
+
+        self._cliente.setblocking(True)
+        self._cliente.send("LIST\r\n".encode())
+        sleep(0.5)
+
+        ans = self._cliente.recv(1024)
+        msgRecv = ans.split(b'\r\n')
+        msgFalta = b''
+        if ans[-2:] != b'\r\n':
+            msgFalta = msgRecv[-1]
+            msgRecv.pop()
+
+        while (ans.find(b':' + bytes(self._server, "utf-8") + b' 323') == -1):
+            for i in msgRecv:
+                try:
+                    mensagens.append(i.decode())
+                except:
+                    pass
+            ans = self._cliente.recv(512)
+            msgRecv = (msgFalta + ans).split(b'\r\n')
+            msgFalta = b''
+            if ans[-2:] != b'\r\n':
+                msgFalta = msgRecv[-1]
+                msgRecv.pop()
+
+        while (ans[-2:] != b'\r\n'):
+            for i in msgRecv:
+                try:
+                    mensagens.append(i.decode())
+                except:
+                    pass
+            ans = self._cliente.recv(512)
+            msgRecv = (msgFalta + ans).split(b'\r\n')
+            msgFalta = b''
+            if ans[-2:] != b'\r\n':
+                msgFalta = msgRecv[-1]
+                msgRecv.pop()
+        
+        for msg in mensagens:
+            msg = msg.split()
+            for word in msg:
+                if '#' in word:
+                    canais.append(word)
+                    break
+        
+        return canais
 
     def quit(self):
         self._cliente.send("QUIT\r\n".encode())
