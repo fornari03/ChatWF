@@ -62,14 +62,32 @@ class Cliente:
 
     # implementacao ruim, eh bom a gente ver as mensagens e analisar uma a uma no objeto, e tbm a posicao do try ta ruim
     def getMessages(self):
+        semMsg = False
         self._cliente.setblocking(False)
-        try:
-            ans = self._cliente.recv(512).decode()
-            while ans[-2:] != "\r\n":
-                ans += self._cliente.recv(512).decode()
-            return ans.split("\r\n")
-        except:
-            return []
+        messages = []
+        dados = []
+        ans = b''
+        while not semMsg:
+            try:
+                ans += self._cliente.recv(512)
+                if ans[-2:] == b'\r\n':
+                    messages.extend(ans.split(b'\r\n'))
+                    ans = b''
+                else:
+                    ans = ans.split(b'\r\n')
+                    messages.extend(ans[:-1])
+                    ans = ans[-1]
+            except:
+                semMsg = True
+        
+        for msg in messages:
+            dados.append(self.messageProcessing(msg))
+
+    def messageProcessing(self, message: bytes):
+        # metodo que vai receber uma lista de mensagens, e delas vai decidir qual metodo chamar
+        # vai retornar uma tupla, o tipo de comando e as informacoes que tirou dele
+        #TODO
+        pass
 
     def getChannelList(self):
         # tem que arrumar esse codigo ainda, acho que eh bom mexer em algumas coisas, como botar em uma lista
@@ -122,6 +140,20 @@ class Cliente:
                     break
         
         return canais
+    
+    def sendPrivMsg(self, message, receiver):
+        # se eh canal, manda o receiver junto com o #
+        self._cliente.send(f"PRIVMSG {receiver} :{message}".encode())
+        # a gente ve se a mensagem foi bem recebida no getMessages, que talvez venha uma mensagem de erro
+
+    def sendPong(self, msgPing):
+        ping = msgPing.split()
+        for i in range(len(ping)):
+            if ping[i] == "PING":
+                server = ping[i+1]
+                break
+        
+        self._cliente.send(f"PONG {server}")
 
     def quit(self):
         self._cliente.send("QUIT\r\n".encode())
