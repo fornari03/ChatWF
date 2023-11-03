@@ -5,13 +5,13 @@ from time import sleep
 
 class Cliente:
 
-    def __init__(self, address):
+    def __init__(self, serverAddress):
         # a porta eh constante
         self.SERVER_PORT = 6667
         self._cliente = socket(AF_INET, SOCK_STREAM)
-        self._server = address
+        self._server = serverAddress
         try:
-            self._cliente.connect((address, self.SERVER_PORT))
+            self._cliente.connect((serverAddress, self.SERVER_PORT))
             self.open = True
         except:
             self.open = False
@@ -82,12 +82,25 @@ class Cliente:
         
         for msg in messages:
             dados.append(self.messageProcessing(msg))
+        
+        return dados
 
     def messageProcessing(self, message: bytes):
         # metodo que vai receber uma lista de mensagens, e delas vai decidir qual metodo chamar
         # vai retornar uma tupla, o tipo de comando e as informacoes que tirou dele
-        #TODO
-        pass
+        serverB = b':' + bytes(self._server, "utf-8")
+
+        if b'PING ' in message:
+            self.sendPong(message)
+            return "ping", None
+        elif b'JOIN ' in message or serverB + b' 323' in message or serverB + b' 473' in message or serverB + b' 471' in message or serverB + b' 474' in message or serverB + b' 475' in message or serverB + b' 323' in message:
+            return self.joinReply(message)
+        elif b'PART ' in message:
+            return self.recvPart(message)
+        elif b' PRIVMSG ' in message:
+            return self.recvPrivMsg(message)
+        else:
+            return "MsgIgnorada", None
 
     def getChannelList(self):
         # tem que arrumar esse codigo ainda, acho que eh bom mexer em algumas coisas, como botar em uma lista
@@ -134,26 +147,117 @@ class Cliente:
         
         for msg in mensagens:
             msg = msg.split()
-            for word in msg:
-                if '#' in word:
-                    canais.append(word)
+            for i in range(len(msg)):
+                if '#' in msg[i]:
+                    canais.append((msg[i], msg[i+1], msg[i + 2][1:]))
                     break
         
         return canais
     
     def sendPrivMsg(self, message, receiver):
         # se eh canal, manda o receiver junto com o #
-        self._cliente.send(f"PRIVMSG {receiver} :{message}".encode())
+        self._cliente.send(f"PRIVMSG {receiver} :{message}\r\n".encode())
         # a gente ve se a mensagem foi bem recebida no getMessages, que talvez venha uma mensagem de erro
 
-    def sendPong(self, msgPing):
-        ping = msgPing.split()
+    def recvPrivMsg(self, message: bytes):
+        msg = message.split(b' ')
+        sender = msg[0].split(b'!')[0][1:]
+        channel = msg[2]
+        text = msg[3][1:]
+
+        try:
+            sender = sender.decode()
+        except:
+            for i in sender:
+                if i > 0x7f:
+                    sender.replace(bytes({i}), b'?')
+            sender = sender.decode()
+        
+        try:
+            text = text.decode()
+        except:
+            for i in text:
+                if i > 0x7f:
+                    text.replace(bytes({i}), b'?')
+            text.decode()
+        
+        try:
+            channel = channel.decode()
+            # no caso da mensagem ser pro usuario, a gente coloca que o canal eh none
+            if channel == self.nickname:
+                channel = None
+        except:
+            return "privMsgError", "nao foi possivel decodificar o nickname ou channel aonde a mensagem quer chegar"        # acho que nunca vai entrar aqui, mas vai que ne
+        
+        return "privMsg", [sender, text, channel]
+        
+
+    def sendPong(self, msgPing: bytes):
+        ping = msgPing.decode().split()
         for i in range(len(ping)):
             if ping[i] == "PING":
                 server = ping[i+1]
                 break
         
-        self._cliente.send(f"PONG {server}")
+        self._cliente.send(f"PONG {server}\r\n".encode())
+
+    def joinChannel(self, channel):
+        # channel ja tem que vir com o # ou &
+        if ("#" not in channel and "&" not in channel) or " " in channel or "," in channel or "\x07" in channel:
+            return "nomeCanalInvalido"
+        
+        self._cliente.send(f"JOIN {channel}\r\n".encode())
+        # o servidor vai mandar um JOIN com o nickname do usuario de volta, mas ai a gente ve isso no message processing
+
+    def leaveChannel(self, channel):
+        if ("#" not in channel and "&" not in channel) or " " in channel or "," in channel or "\x07" in channel:
+            return "nomeCanalInvalido"
+        
+        self._cliente.send(f"PART {channel}\r\n".encode())
+
+    def joinReply(self, message: bytes):
+        msg = message.split(b' ')
+        if b'JOIN ' in message:
+            newUser = msg[0].split(b'!')[0][1:]     # pega so o nick da pessoa, tirando o : que ta no comeco da mensagem
+            channel = msg[2]                        # o msg[1] eh o JOIN
+            try:
+                return "newUser", [newUser.decode(), channel.decode()]
+            except:
+                return "nonDecodableUsername", None
+        elif b'332' in message:
+            channel = msg[-2]
+            topic = msg[-1]
+            try:
+                return "topic", [channel.decode(), topic[1:].decode()]
+            except:
+                for i in topic:
+                    if i > 0x7f:
+                        topic.replace(bytes({i}), b'?')
+                return "topic", [channel.decode(), topic[1:].decode()]
+        # talvez tenha que colocar mais um if pro caso de ser uma mensagem de quem ta no canal (codigo 353 pra RPL_NAMREPLY e 366 pra RPL_ENDOFNAMES)
+        else:
+            return "joinError", [msg[-2].decode(), msg[-1].decode()]           # retorna a [canal, mensagem de erro]
+        
+    def recvPart(self, message: bytes):
+        msg = message.split(b' ')
+        user = msg[0].split(b'!')[0][1:]
+        # msg[1] eh o 'PART'
+        channel = msg[2]
+        partMsg = b''
+        if len(msg) > 3:
+            partMsg = msg[3]
+        
+        try:
+            return "part", [user.decode(), channel.decode(), partMsg.decode()]
+        except:
+            for i in user:
+                if i > 0x7f:
+                    user.replace(bytes({i}), b'?')
+            for i in partMsg:
+                if i > 0x7f:
+                    partMsg.replace(bytes({i}), b'?')
+            
+            return "part", [user.decode(), channel.decode(), partMsg.decode()]
 
     def quit(self):
         self._cliente.send("QUIT\r\n".encode())
