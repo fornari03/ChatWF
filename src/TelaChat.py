@@ -1,13 +1,18 @@
 from PyQt5 import QtWidgets, uic
 from datetime import datetime
+from Cliente import *
 
 class TelaChat:
-    def __init__(self, app):
+    def __init__(self, app, cliente, channel):
         self.app = app
+        self.channel = channel
+        # channel é uma tupla com (nome_canal, numero_usuarios, tópico)
+        self.cliente = cliente
         self.call=uic.loadUi(r"interfaces\ModeloChat.ui")
 
         self.call.pushButtonEnviar.clicked.connect(self.action_enviar)
         self.call.lineEditMensagem.returnPressed.connect(self.action_enviar)
+        self.call.pushButtonEVoltar.clicked.connect(self.action_voltar)
 
         self.call.lineEditMensagem.setFocus()
 
@@ -24,7 +29,7 @@ class TelaChat:
     def action_enviar(self):
         msg = self.call.lineEditMensagem.text()
         if msg.strip() != "": # verifica se digitou algo
-            # enviar_msg(msg, canal)
+            self.cliente.sendPrivMsg(msg, self.channel)
             self.fancy_chat_print(msg)
         self.call.lineEditMensagem.setText("")
         self.call.lineEditMensagem.setFocus()
@@ -32,4 +37,10 @@ class TelaChat:
 
     def receber(self):
         # atualizar o chat quando outro user manda msg
+        #if cliente.rcvPrivMsg()
+        pass
+
+    
+    def action_voltar(self):
+        # pilha
         pass
