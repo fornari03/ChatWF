@@ -86,8 +86,10 @@ class Cliente:
     def messageProcessing(self, message: bytes):
         # metodo que vai receber uma lista de mensagens, e delas vai decidir qual metodo chamar
         # vai retornar uma tupla, o tipo de comando e as informacoes que tirou dele
-        #TODO
-        pass
+        if b'PING ' in message:
+            self.sendPong(message)
+            return ("ping", None)
+        #TODO o resto
 
     def getChannelList(self):
         # tem que arrumar esse codigo ainda, acho que eh bom mexer em algumas coisas, como botar em uma lista
@@ -134,9 +136,9 @@ class Cliente:
         
         for msg in mensagens:
             msg = msg.split()
-            for word in msg:
-                if '#' in word:
-                    canais.append(word)
+            for i in range(len(msg)):
+                if '#' in msg[i]:
+                    canais.append((msg[i], msg[i+1], msg[i + 2][1:]))
                     break
         
         return canais
@@ -146,14 +148,21 @@ class Cliente:
         self._cliente.send(f"PRIVMSG {receiver} :{message}".encode())
         # a gente ve se a mensagem foi bem recebida no getMessages, que talvez venha uma mensagem de erro
 
-    def sendPong(self, msgPing):
-        ping = msgPing.split()
+    def sendPong(self, msgPing: bytes):
+        ping = msgPing.decode().split()
         for i in range(len(ping)):
             if ping[i] == "PING":
                 server = ping[i+1]
                 break
         
         self._cliente.send(f"PONG {server}")
+
+    def joinChannel(self, channel):
+        # channel ja tem que vir com o # ou &
+        if ("#" not in channel and "&" not in channel) or " " in channel or "," in channel or "\x07" in channel:
+            return "nomeCanalInvalido"
+        
+        self._cliente.send(f"JOIN {channel}\r\n")
 
     def quit(self):
         self._cliente.send("QUIT\r\n".encode())
