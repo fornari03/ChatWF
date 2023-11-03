@@ -97,6 +97,8 @@ class Cliente:
             return self.joinReply(message)
         elif b'PART ' in message:
             return self.recvPart(message)
+        elif b' PRIVMSG ' in message:
+            return self.recvPrivMsg(message)
         else:
             return "MsgIgnorada", None
 
@@ -154,8 +156,41 @@ class Cliente:
     
     def sendPrivMsg(self, message, receiver):
         # se eh canal, manda o receiver junto com o #
-        self._cliente.send(f"PRIVMSG {receiver} :{message}".encode())
+        self._cliente.send(f"PRIVMSG {receiver} :{message}\r\n".encode())
         # a gente ve se a mensagem foi bem recebida no getMessages, que talvez venha uma mensagem de erro
+
+    def recvPrivMsg(self, message: bytes):
+        msg = message.split(b' ')
+        sender = msg[0].split(b'!')[0][1:]
+        channel = msg[2]
+        text = msg[3][1:]
+
+        try:
+            sender = sender.decode()
+        except:
+            for i in sender:
+                if i > 0x7f:
+                    sender.replace(bytes({i}), b'?')
+            sender = sender.decode()
+        
+        try:
+            text = text.decode()
+        except:
+            for i in text:
+                if i > 0x7f:
+                    text.replace(bytes({i}), b'?')
+            text.decode()
+        
+        try:
+            channel = channel.decode()
+            # no caso da mensagem ser pro usuario, a gente coloca que o canal eh none
+            if channel == self.nickname:
+                channel = None
+        except:
+            return "privMsgError", "nao foi possivel decodificar o nickname ou channel aonde a mensagem quer chegar"        # acho que nunca vai entrar aqui, mas vai que ne
+        
+        return "privMsg", [sender, text, channel]
+        
 
     def sendPong(self, msgPing: bytes):
         ping = msgPing.decode().split()
