@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, uic
 from TelaChat import *
 from Cliente import *
 from TelaEscolhaCanal import *
+from Pilha import *
 
 
 class TelaAutenticacao:
@@ -11,7 +12,7 @@ class TelaAutenticacao:
 
         self.call.lineEditNickname.setFocus()
 
-        status_possiveis = ["Selecione um status", "Invisível"]
+        status_possiveis = ["Selecione um status", "Normal", "Invisível"]
         for status in status_possiveis:
             self.call.comboBoxStatus.addItem(status)
 
@@ -31,14 +32,15 @@ class TelaAutenticacao:
 
     def throw_message_box(self, titulo, texto):
         self.limpar_fields()
-        popup = QtWidgets.QMessageBox()
-        popup.setIcon(QtWidgets.QMessageBox.Warning)
-        popup.setText(texto)
-        popup.setWindowTitle(titulo)
-        popup.exec_()
+        aviso = QtWidgets.QMessageBox()
+        aviso.setIcon(QtWidgets.QMessageBox.Warning)
+        aviso.setText(texto)
+        aviso.setWindowTitle(titulo)
+        aviso.exec_()
 
     def abre_lista_channels(self):
         channels = TelaEscolhaCanal(self.app, self.cliente)
+        pilha_telas.append(self)
         self.call.hide()
 
     def action_login(self):
@@ -55,7 +57,11 @@ class TelaAutenticacao:
             # se ja tiver algum nick com o nome digitado:
             self.cliente = Cliente(self.call.lineEditServidor.text())
             if self.cliente.open:
-                retorno = self.cliente.autenticar(self.call.lineEditSenha.text(), self.call.lineEditNickname.text(), self.call.lineEditUsername.text(), self.call.comboBoxStatus.currentIndex()-1)
+                if self.call.comboBoxStatus.currentIndex()-1 == 1:
+                    modo = 0    # normal
+                else:
+                    modo = 8    # invisível
+                retorno = self.cliente.autenticar(self.call.lineEditSenha.text(), self.call.lineEditNickname.text(), self.call.lineEditUsername.text(), modo)
 
 
                 if retorno == "pingInesperado":
@@ -65,6 +71,7 @@ class TelaAutenticacao:
                 elif retorno == "semBurstWelcome":
                     pass
                 else:
+
                     self.abre_lista_channels()
                     
             else:    
