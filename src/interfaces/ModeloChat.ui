@@ -140,6 +140,22 @@ padding: 5px;</string>
      <string>Voltar</string>
     </property>
    </widget>
+   <widget class="QLabel" name="labelNomeCanal">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>20</y>
+      <width>131</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: #333; font-size: 14px; font-weight: bold; margin-bottom: 5px;</string>
+    </property>
+    <property name="text">
+     <string>Nome do canal</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

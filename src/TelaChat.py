@@ -23,6 +23,8 @@ class TelaChat:
         self.call.lineEditMensagem.setFocus()
         self.call.lineEditMensagem.setPlaceholderText("Mensagem")
 
+        self.call.labelNomeCanal.setText(self.channel[0])
+
         self.call.pushButtonVoltar.setStyleSheet("""
             QPushButton#pushButtonVoltar {
                 background-color: #0074D9;
@@ -105,5 +107,6 @@ class TelaChat:
     
     def action_voltar(self):
         self.call.hide()
+        self.cliente.leaveChannel(self.channel)
         pilha_telas.pop().call.show()
 
