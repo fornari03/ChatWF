@@ -3,6 +3,7 @@ from TelaChat import *
 from Cliente import *
 from TelaEscolhaCanal import *
 from Pilha import *
+from testeInstancia import *
 
 
 class TelaAutenticacao:
@@ -60,7 +61,7 @@ class TelaAutenticacao:
         aviso.exec_()
 
     def abre_lista_channels(self):
-        channels = TelaEscolhaCanal(self.app, self.cliente)
+        self.channels = TelaEscolhaCanal(self.app, self.cliente)
         pilha_telas.append(self)
         self.call.hide()
 

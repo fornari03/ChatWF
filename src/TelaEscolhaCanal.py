@@ -109,7 +109,7 @@ class TelaEscolhaCanal:
         try:
             if linha != -1:
                 canal = self.channels[linha]
-                chat = TelaChat(self.app, self.cliente, canal)
+                self.chat = TelaChat(self.app, self.cliente, canal)
                 pilha_telas.append(self)
                 self.call.hide()
             else:
