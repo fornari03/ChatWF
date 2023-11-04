@@ -31,9 +31,8 @@ class Cliente:
             ans += self._cliente.recv(1024).decode()
             # espaco pq pode ter palavras que tem ping no burst de boas vindas, entao a mensagem de PING sempre tem um espaco depois, por especificacao do protocolo
             if ans.find("PING ") != -1:
-                self._cliente.close()
-                self.open = False
-                return "pingInesperado"
+                i = ans.find("PING ")
+                self._cliente.send(f"PONG {ans[i+5:ans[i+5:].find(' ')]}\r\n".encode())
 
 
         if ans.find("001") != -1:
@@ -155,7 +154,7 @@ class Cliente:
             msg = msg.split()
             for i in range(len(msg)):
                 if '#' in msg[i]:
-                    canais.append((msg[i], msg[i+1], msg[i + 2][1:]))
+                    canais.append((msg[i], msg[i+1], " ".join(msg[i+2:])[1:]))
                     break
         
         return canais
