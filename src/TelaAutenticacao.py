@@ -8,7 +8,10 @@ from Pilha import *
 class TelaAutenticacao:
     def __init__(self):
         self.app=QtWidgets.QApplication([])
-        self.call=uic.loadUi(r"interfaces\ModeloAutenticacao.ui")
+        try:
+            self.call=uic.loadUi(r"interfaces\ModeloAutenticacao.ui")
+        except:
+            self.call=uic.loadUi(r"src\interfaces\ModeloAutenticacao.ui")
 
         self.call.lineEditNickname.setFocus()
 
@@ -31,7 +34,7 @@ class TelaAutenticacao:
         self.call.lineEditNickname.setFocus()
 
     def throw_message_box(self, titulo, texto):
-        self.limpar_fields()
+        # self.limpar_fields()
         aviso = QtWidgets.QMessageBox()
         aviso.setIcon(QtWidgets.QMessageBox.Warning)
         aviso.setText(texto)
@@ -44,13 +47,27 @@ class TelaAutenticacao:
         self.call.hide()
 
     def action_login(self):
-        if (self.call.lineEditNickname.text().strip() == "" or 
-        self.call.lineEditUsername.text().strip() == "" or 
-        self.call.lineEditSenha.text().strip() == "" or 
-        self.call.lineEditServidor.text().strip() == "" or 
-        self.call.comboBoxStatus.currentIndex() == 0 or 
-        self.call.comboBoxStatus.currentIndex() == -1):
+        if self.call.lineEditNickname.text().strip() == "":
             self.throw_message_box("Atenção", "Você deve preencher todos os campos!")
+            self.call.lineEditNickname.setFocus()
+            self.call.lineEditNickname.setText("")
+        elif self.call.lineEditUsername.text().strip() == "":
+            self.throw_message_box("Atenção", "Você deve preencher todos os campos!")
+            self.call.lineEditUsername.setFocus()
+            self.call.lineEditUsername.setText("")
+        elif self.call.lineEditSenha.text().strip() == "":
+            self.throw_message_box("Atenção", "Você deve preencher todos os campos!")
+            self.call.lineEditSenha.setFocus()
+            self.call.lineEditNickname.setText("")
+        elif self.call.lineEditServidor.text().strip() == "":
+            self.throw_message_box("Atenção", "Você deve preencher todos os campos!")
+            self.call.lineEditServidor.setFocus()
+            self.call.lineEditServidor.setText("")
+        elif (self.call.comboBoxStatus.currentIndex() == 0 or
+              self.call.comboBoxStatus.currentIndex() == -1):
+            self.throw_message_box("Atenção", "Selecione um status!")
+            self.call.comboBoxStatus.setFocus()
+            self.call.comboBoxStatus.setCurrentIndex(0)
 
         else :
             # envia pro servidor a tentativa de autenticação
@@ -68,10 +85,12 @@ class TelaAutenticacao:
                     self.throw_message_box("Atenção", "Ping inesperado!")
                 elif retorno == "nickError":
                     self.throw_message_box("Atenção", "O nickname digitado já está em uso.")
+                    self.call.lineEditNickname.setFocus()
+                    self.call.lineEditNickname.setText("")
                 elif retorno == "semBurstWelcome":
+                    # IMPLEMENTAR
                     pass
                 else:
-
                     self.abre_lista_channels()
                     
             else:    

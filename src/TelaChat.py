@@ -44,14 +44,14 @@ class TelaChat:
 
 
     def receber(self):
-        # atualizar o chat quando outro user manda msg
-        #if self.cliente.rcvPrivMsg()
-        mensagem = ("user", "blablabla")
-        if mensagem[0] not in self.usuarios.keys():
-            cor = self.define_cor()
-            self.usuarios[mensagem[0]] = cor
+        # atualiza o chat quando outro user manda msg
+        for mensagem in self.cliente.getMessages():
+            if mensagem[0] == "privMsg":
+                if mensagem[1][0] not in self.usuarios.keys():
+                    cor = self.define_cor()
+                    self.usuarios[mensagem[1][0]] = cor
 
-        self.fancy_chat_print(mensagem[1], mensagem[0])
+                self.fancy_chat_print(mensagem[1][1], mensagem[1][0])
 
     
     def define_cor(self):

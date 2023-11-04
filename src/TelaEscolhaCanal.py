@@ -16,7 +16,9 @@ class TelaEscolhaCanal:
 
         self.call.itemSelectionChanged.connect(self.action_row_clicked)
         self.call.lineEditPesquisar.setPlaceholderText("Pesquise por um canal ou usuário")
+        
         self.call.pushButtonEntrarPesquisa.clicked.connect(self.action_entrar_pesquisa)
+        self.call.lineEditPesquisar.returnPressed.connect(self.action_entrar_pesquisa)
 
         self.call.carregarTabela()
 
