@@ -100,8 +100,8 @@
    <widget class="QPushButton" name="pushButtonLogin">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>440</y>
+      <x>200</x>
+      <y>460</y>
       <width>101</width>
       <height>41</height>
      </rect>
@@ -203,6 +203,37 @@ padding: 5px;</string>
     </property>
     <property name="text">
      <string>ChatWF</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelServidor">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>390</y>
+      <width>71</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: #333; font-size: 14px; font-weight: bold; margin-bottom: 5px;</string>
+    </property>
+    <property name="text">
+     <string>Servidor:</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEditServidor">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>390</y>
+      <width>191</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: #ffffff;
+border: 1px soolid #ccc;
+padding: 5px;</string>
     </property>
    </widget>
   </widget>

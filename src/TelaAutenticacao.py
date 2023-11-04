@@ -45,11 +45,11 @@ class TelaAutenticacao:
 
     def action_login(self):
         if (self.call.lineEditNickname.text().strip() == "" or 
-        self.call.lineEditUserkname.text().strip() == "" or 
+        self.call.lineEditUsername.text().strip() == "" or 
         self.call.lineEditSenha.text().strip() == "" or 
         self.call.lineEditServidor.text().strip() == "" or 
-        self.call.comboBoxStatus.index() == 0 or 
-        self.call.comboBoxStatus.index() == -1):
+        self.call.comboBoxStatus.currentIndex() == 0 or 
+        self.call.comboBoxStatus.currentIndex() == -1):
             self.throw_message_box("Atenção", "Você deve preencher todos os campos!")
 
         else :
@@ -57,7 +57,7 @@ class TelaAutenticacao:
             # se ja tiver algum nick com o nome digitado:
             self.cliente = Cliente(self.call.lineEditServidor.text())
             if self.cliente.open:
-                if self.call.comboBoxStatus.currentIndex()-1 == 1:
+                if self.call.comboBoxStatus.currentIndex() == 1:
                     modo = 0    # normal
                 else:
                     modo = 8    # invisível
