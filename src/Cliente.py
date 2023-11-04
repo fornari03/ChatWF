@@ -99,6 +99,12 @@ class Cliente:
             return self.recvPart(message)
         elif b' PRIVMSG ' in message:
             return self.recvPrivMsg(message)
+        elif b'401 ' in message and b':No such nick' in message:
+            return "nickOuCanalInexistente", message.split(b' ')[-2]
+        elif b'404 ' in message or b'411 ' in message or b'412 ' in message or b'413 ' in message or b'414 ' in message:
+            return self.recvPrivMsg(message)
+        elif b'301 ' in message:
+            return self.recvAway(message)
         else:
             return "MsgIgnorada", None
 
@@ -179,7 +185,7 @@ class Cliente:
             for i in text:
                 if i > 0x7f:
                     text.replace(bytes({i}), b'?')
-            text.decode()
+            text = text.decode()
         
         try:
             channel = channel.decode()
@@ -190,7 +196,29 @@ class Cliente:
             return "privMsgError", "nao foi possivel decodificar o nickname ou channel aonde a mensagem quer chegar"        # acho que nunca vai entrar aqui, mas vai que ne
         
         return "privMsg", [sender, text, channel]
-        
+
+    def recvPrivMsgError(self, message: bytes):
+        msg = message.split(b' ')
+        return "erroEnvioPrivMsg", msg[-1].decode()[1:]
+    
+    def recvAway(self, message: bytes):
+        msg = message.split(b' ')
+        try:
+            return "userAway", [msg[-2].decode(), msg[-1].decode()[1:]]
+        except:
+            nick = msg[-2]
+            awayMsg = msg[-1]
+            for i in nick:
+                if i > 0x7f:
+                    nick.replace(bytes({i}), b'?')
+            nick = nick.decode()
+
+            for i in awayMsg:
+                if i > 0x7f:
+                    awayMsg.replace(bytes({i}), b'?')
+            awayMsg = awayMsg.decode()
+
+            return "userAway", [nick, awayMsg]          
 
     def sendPong(self, msgPing: bytes):
         ping = msgPing.decode().split()
@@ -224,7 +252,7 @@ class Cliente:
                 return "newUser", [newUser.decode(), channel.decode()]
             except:
                 return "nonDecodableUsername", None
-        elif b'332' in message:
+        elif b'332 ' in message:
             channel = msg[-2]
             topic = msg[-1]
             try:
