@@ -8,26 +8,93 @@ class TelaEscolhaCanal:
     def __init__(self, app, cliente):
         self.app = app
         self.cliente = cliente
-        self.call=uic.loadUi(r"interfaces\ModeloListaChats.ui")
+        try:
+            self.call=uic.loadUi(r"interfaces\ModeloListaChats.ui")
+        except:
+            self.call=uic.loadUi(r"src\interfaces\ModeloListaChats.ui")
 
         self.call.tableWidgetCanais.setColumnWidth(0, 136)
         self.call.tableWidgetCanais.setColumnWidth(1, 40)
         self.call.tableWidgetCanais.setColumnWidth(2, 205)
 
-        self.call.itemSelectionChanged.connect(self.action_row_clicked)
+        self.call.pushButtonEntrar.clicked.connect(self.action_entrar)
         self.call.lineEditPesquisar.setPlaceholderText("Pesquise por um canal ou usuário")
-        
+
+        self.call.tableWidgetCanais.setStyleSheet("""
+            QTableWidget::item {
+                padding: 5px;
+                font-size: 14px;
+            }
+
+            QTableWidget::item:selected {
+                background-color: #0074D9;
+                color: #FFFFFF;
+            }
+        """)
+
+        self.call.pushButtonVoltar.setStyleSheet("""
+            QPushButton#pushButtonVoltar {
+                background-color: #0074D9;
+                color: #FFFFFF; 
+                border: 2px solid #0056b3; 
+                border-radius: 5px; 
+                padding: 5px 15px;
+                font-size: 11px;
+                font-weight: bold;
+            }
+                                                 
+            QPushButton#pushButtonVoltar:hover {
+                background-color: #0056b3;
+                color: #FFFFFF;
+                border: 2px solid #003f7f;
+            }
+        """)
+
+        self.call.pushButtonEntrarPesquisa.setStyleSheet("""
+            QPushButton#pushButtonEntrarPesquisa {
+                background-color: #0074D9;
+                color: #FFFFFF; 
+                border: 2px solid #0056b3; 
+                border-radius: 5px; 
+                padding: 5px 15px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+                                                 
+            QPushButton#pushButtonEntrarPesquisa:hover {
+                background-color: #0056b3;
+                color: #FFFFFF;
+                border: 2px solid #003f7f;
+            }
+        """)
+
+        self.call.pushButtonEntrar.setStyleSheet("""
+            QPushButton#pushButtonEntrar {
+                background-color: #0074D9;
+                color: #FFFFFF; 
+                border: 2px solid #0056b3; 
+                border-radius: 5px; 
+                padding: 5px 15px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+                                                 
+            QPushButton#pushButtonEntrar:hover {
+                background-color: #0056b3;
+                color: #FFFFFF;
+                border: 2px solid #003f7f;
+            }
+        """)
+
         self.call.pushButtonEntrarPesquisa.clicked.connect(self.action_entrar_pesquisa)
         self.call.lineEditPesquisar.returnPressed.connect(self.action_entrar_pesquisa)
 
-        self.call.carregarTabela()
+        self.carregarTabela()
 
         self.call.show()
 
 
     def carregarTabela(self):
-        # ALTERAR MÉTODO
-        # quando getChanneList estiver pronto
         self.channels = self.cliente.getChannelList()
         self.call.tableWidgetCanais.setRowCount(len(self.channels))
         for row, channel in enumerate(self.channels):

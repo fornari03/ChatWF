@@ -95,7 +95,11 @@
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true"/>
+       <string notr="true">    background-color: #f5f5f5;
+    selection-background-color: #0074D9;
+    selection-color: #FFFFFF;
+    border: 1px solid #ccc;
+    border-radius: 5px;</string>
       </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>

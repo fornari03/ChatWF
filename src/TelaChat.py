@@ -11,7 +11,10 @@ class TelaChat:
         # channel é uma tupla com (nome_canal, numero_usuarios, tópico)
         self.cliente = cliente
         self.usuarios = {}
-        self.call=uic.loadUi(r"interfaces\ModeloChat.ui")
+        try:
+            self.call=uic.loadUi(r"interfaces\ModeloChat.ui")
+        except:
+            self.call=uic.loadUi(r"src\interfaces\ModeloChat.ui")
 
         self.call.pushButtonEnviar.clicked.connect(self.action_enviar)
         self.call.lineEditMensagem.returnPressed.connect(self.action_enviar)
@@ -19,6 +22,42 @@ class TelaChat:
 
         self.call.lineEditMensagem.setFocus()
         self.call.lineEditMensagem.setPlaceholderText("Mensagem")
+
+        self.call.pushButtonVoltar.setStyleSheet("""
+            QPushButton#pushButtonVoltar {
+                background-color: #0074D9;
+                color: #FFFFFF; 
+                border: 2px solid #0056b3; 
+                border-radius: 5px; 
+                padding: 5px 15px;
+                font-size: 11px;
+                font-weight: bold;
+            }
+                                                 
+            QPushButton#pushButtonVoltar:hover {
+                background-color: #0056b3;
+                color: #FFFFFF;
+                border: 2px solid #003f7f;
+            }
+        """)
+
+        self.call.pushButtonEnviar.setStyleSheet("""
+            QPushButton#pushButtonEnviar {
+                background-color: #0074D9;
+                color: #FFFFFF; 
+                border: 2px solid #0056b3; 
+                border-radius: 5px; 
+                padding: 5px 15px;
+                font-size: 11px;
+                font-weight: bold;
+            }
+                                                 
+            QPushButton#pushButtonEnviar:hover {
+                background-color: #0056b3;
+                color: #FFFFFF;
+                border: 2px solid #003f7f;
+            }
+        """)
 
 
         self.atualiza_mensagens = QtCore.QTimer(self)

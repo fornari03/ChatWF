@@ -19,6 +19,24 @@ class TelaAutenticacao:
         for status in status_possiveis:
             self.call.comboBoxStatus.addItem(status)
 
+        self.call.pushButtonLogin.setStyleSheet("""                                
+            QPushButton#pushButtonLogin {
+                background-color: #0074D9;
+                color: #FFFFFF;
+                border: 2px solid #0056b3;
+                border-radius: 5px;
+                padding: 5px 15px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+
+            QPushButton#pushButtonLogin:hover {
+                background-color: #0056b3;
+                color: #FFFFFF;
+                border: 2px solid #003f7f;
+            }
+        """)
+
         self.call.pushButtonLogin.clicked.connect(self.action_login)
 
         self.call.show()
