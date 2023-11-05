@@ -21,7 +21,7 @@ class TelaEscolhaCanal:
         self.call.pushButtonCriar.clicked.connect(self.action_criar)
         self.call.lineEditCriar.returnPressed.connect(self.action_criar)
         self.call.pushButtonRefresh.clicked.connect(self.action_refresh)
-        self.call.lineEditPesquisar.setPlaceholderText("Pesquise por um canal ou usuário")
+        self.call.lineEditPesquisar.setPlaceholderText("Pesquise por um canal")
         self.call.lineEditCriar.setPlaceholderText("Nome do canal a ser criado")
         self.call.tableWidgetCanais.verticalHeader().setVisible(False)
 
@@ -44,7 +44,8 @@ class TelaEscolhaCanal:
         """)
 
         self.call.scrollAreaWidgetContents.setStyleSheet("""
-            background-color: #E5E5E5; /* Cor de fundo do scrollAreaWidgetContents */
+            background-color: #E5E5E5;
+            border: 0px solid #CCCCCC
         """)
 
         self.call.tableWidgetCanais.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
@@ -168,7 +169,7 @@ class TelaEscolhaCanal:
         except:
             aviso = QtWidgets.QMessageBox()
             aviso.setIcon(QtWidgets.QMessageBox.Warning)
-            aviso.setText("ENão foi possível se conectar.")
+            aviso.setText("Não foi possível se conectar.")
             aviso.setWindowTitle("Erro inesperado")
             aviso.exec_()
 
@@ -184,36 +185,39 @@ class TelaEscolhaCanal:
     
 
     def action_entrar_pesquisa(self):
-        encontrou = False
-        for channel in self.channels:
-            if channel[0] == self.call.lineEditPesquisar.text():
-                if self.cliente.joinChannel(channel[0]) == "nomeCanalInvalido":
-                    aviso = QtWidgets.QMessageBox()
-                    aviso.setIcon(QtWidgets.QMessageBox.Warning)
-                    aviso.setText("Nome do canal inválido!")
-                    aviso.setWindowTitle("Atenção")
-                    aviso.exec_()
-                    self.call.lineEditPesquisar.setText("")
-                    self.call.lineEditPesquisar.setFocus()
+        confirmar = QtWidgets.QMessageBox()
+        confirmar.setIcon(QtWidgets.QMessageBox.Question)
+        confirmar.setWindowTitle("Confirmação")
+        confirmar.setText(f"Deseja mesmo entrar no canal {self.call.lineEditPesquisar.text()}?")
+        confirmar.addButton("Sim", QtWidgets.QMessageBox.AcceptRole)
+        confirmar.addButton("Cancelar", QtWidgets.QMessageBox.RejectRole)
+        result = confirmar.exec()
 
-                else:
-                    self.chat = TelaChat(self.app, self.cliente, channel)
-                    pilha_telas.append(self)
-                    self.call.hide()
-                    encontrou = True
+        if result == QtWidgets.QMessageBox.AcceptRole:
+            for channel in self.channels:
+                if channel[0] == self.call.lineEditPesquisar.text():
+                    if self.cliente.joinChannel(channel[0]) == "nomeCanalInvalido":
+                        aviso = QtWidgets.QMessageBox()
+                        aviso.setIcon(QtWidgets.QMessageBox.Warning)
+                        aviso.setText("Nome do canal inválido!")
+                        aviso.setWindowTitle("Atenção")
+                        aviso.exec_()
+                        self.call.lineEditPesquisar.setText("")
+                        self.call.lineEditPesquisar.setFocus()
 
-        # se nao encontrou um canal, procura o usuário
-        if not encontrou:
-            if False:
-                pass
-
+                    else:
+                        self.chat = TelaChat(self.app, self.cliente, channel)
+                        pilha_telas.append(self)
+                        self.call.hide()
+                    break
             else:
                 aviso = QtWidgets.QMessageBox()
                 aviso.setIcon(QtWidgets.QMessageBox.Warning)
-                aviso.setText("Canal ou usuário não encontrado!")
+                aviso.setText("Não existe um canal com este nome!")
                 aviso.setWindowTitle("Atenção")
                 aviso.exec_()
-
+                self.call.lineEditCriar.setText("")
+                self.call.lineEditCriar.setFocus()
 
     def action_criar(self):
         for channel in self.channels:
