@@ -177,7 +177,7 @@ class TelaEscolhaCanal:
                 aviso.exec_()
         except:
             aviso = QtWidgets.QMessageBox()
-            aviso.setIcon(QtWidgets.QMessageBox.Warning)
+            aviso.setIcon(QtWidgets.QMessageBox.Critical)
             aviso.setText("Não foi possível se conectar.")
             aviso.setWindowTitle("Erro inesperado")
             aviso.exec_()
@@ -201,6 +201,16 @@ class TelaEscolhaCanal:
         for msg in self.cliente.getMessages():
             if msg[0] == "privMsg" and self.chat != None and msg[1][2] == self.chat.channel[0]:
                 self.chat.receber(msg)
+            elif msg[0] == "conexaoEncerradaPeloServidor":  
+                self.olhaServer.stop()  
+                aviso = QtWidgets.QMessageBox()
+                aviso.setIcon(QtWidgets.QMessageBox.Critical)
+                aviso.setText("A conexão com o servidor foi encerrada inesperadamente.")
+                aviso.setWindowTitle("Erro inesperado")
+                aviso.exec_()
+                self.call.hide()
+                pilha_telas.pop().call.show()
+
     
 
     # tenta entrar no canal digitado
@@ -236,8 +246,8 @@ class TelaEscolhaCanal:
                 aviso.setText("Não existe um canal com este nome!")
                 aviso.setWindowTitle("Atenção")
                 aviso.exec_()
-                self.call.lineEditCriar.setText("")
-                self.call.lineEditCriar.setFocus()
+                self.call.lineEditPesquisar.setText("")
+                self.call.lineEditPesquisar.setFocus()
 
 
     # tenta criar o canal com o nome digitado

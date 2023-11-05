@@ -107,6 +107,8 @@ class Cliente:
             return self.recvPrivMsg(message)
         elif b'301 ' in message:
             return self.recvAway(message)
+        elif b'ERROR :Closing Link:' in message:
+            return "conexaoEncerradaPeloServidor"
         else:
             return "MsgIgnorada", None
 

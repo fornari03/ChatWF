@@ -99,6 +99,7 @@ class TelaAutenticacao:
 
         else :
             # envia pro servidor a tentativa de autenticação
+            self.throw_message_box("Aviso", "A seguinte operação demora uns instantes.\nPor favor, não feche a aplicação!")
             self.cliente = Cliente(self.call.lineEditServidor.text())
             if self.cliente.open:
                 if self.call.comboBoxModo.currentIndex() == 1:
