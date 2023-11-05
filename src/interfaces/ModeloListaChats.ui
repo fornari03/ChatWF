@@ -45,7 +45,7 @@
    <widget class="QPushButton" name="pushButtonEntrar">
     <property name="geometry">
      <rect>
-      <x>200</x>
+      <x>280</x>
       <y>520</y>
       <width>101</width>
       <height>41</height>
@@ -222,6 +222,28 @@ padding: 5px;</string>
     </property>
     <property name="text">
      <string>Criar</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButtonRefresh">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>520</y>
+      <width>101</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">    background-color: #0074D9;
+    color: #FFFFFF; 
+    border: 2px solid #0056b3; 
+    border-radius: 5px; 
+    padding: 5px 15px;
+    font-size: 14px;
+    font-weight: bold;</string>
+    </property>
+    <property name="text">
+     <string>Refresh</string>
     </property>
    </widget>
   </widget>

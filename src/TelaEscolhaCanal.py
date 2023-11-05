@@ -20,19 +20,31 @@ class TelaEscolhaCanal:
         self.call.pushButtonEntrar.clicked.connect(self.action_entrar)
         self.call.pushButtonCriar.clicked.connect(self.action_criar)
         self.call.lineEditCriar.returnPressed.connect(self.action_criar)
+        self.call.pushButtonRefresh.clicked.connect(self.action_refresh)
         self.call.lineEditPesquisar.setPlaceholderText("Pesquise por um canal ou usuário")
         self.call.lineEditCriar.setPlaceholderText("Nome do canal a ser criado")
+        self.call.tableWidgetCanais.verticalHeader().setVisible(False)
 
         self.call.tableWidgetCanais.setStyleSheet("""
+            QTableWidget {
+                background-color: #FFFFFF;
+                border: 1px solid #CCCCCC;
+            }                  
+                                                                                
             QTableWidget::item {
-                padding: 5px;
-                font-size: 14px;
+                padding: 10px;
+                font-size: 16px;
+                border-bottom: 1px solid #CCCCCC;                             
             }
 
             QTableWidget::item:selected {
                 background-color: #0074D9;
                 color: #FFFFFF;
             }
+        """)
+
+        self.call.scrollAreaWidgetContents.setStyleSheet("""
+            background-color: #E5E5E5; /* Cor de fundo do scrollAreaWidgetContents */
         """)
 
         self.call.tableWidgetCanais.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
@@ -133,10 +145,20 @@ class TelaEscolhaCanal:
         try:
             if linha != -1:
                 canal = self.channels[linha]
-                self.cliente.joinChannel(canal)
-                self.chat = TelaChat(self.app, self.cliente, canal)
-                pilha_telas.append(self)
-                self.call.hide()
+
+                confirmar = QtWidgets.QMessageBox()
+                confirmar.setIcon(QtWidgets.QMessageBox.Question)
+                confirmar.setWindowTitle("Confirmação")
+                confirmar.setText(f"Deseja mesmo entrar no canal {canal}?")
+                confirmar.addButton("Sim", QtWidgets.QMessageBox.AcceptRole)
+                confirmar.addButton("Cancelar", QtWidgets.QMessageBox.RejectRole)
+                result = confirmar.exec()
+
+                if result == QtWidgets.QMessageBox.AcceptRole:
+                    self.cliente.joinChannel(canal)
+                    self.chat = TelaChat(self.app, self.cliente, canal)
+                    pilha_telas.append(self)
+                    self.call.hide()
             else:
                 aviso = QtWidgets.QMessageBox()
                 aviso.setIcon(QtWidgets.QMessageBox.Information)
@@ -194,17 +216,46 @@ class TelaEscolhaCanal:
 
 
     def action_criar(self):
-        if self.cliente.joinChannel(self.call.lineEditCriar.text()) == "nomeCanalInvalido":
-            aviso = QtWidgets.QMessageBox()
-            aviso.setIcon(QtWidgets.QMessageBox.Warning)
-            aviso.setText("Nome do canal inválido!")
-            aviso.setWindowTitle("Atenção")
-            aviso.exec_()
-            self.call.lineEditCriar.setText("")
-            self.call.lineEditCriar.setFocus()
-
+        for channel in self.channels:
+            if channel[0] == self.call.lineEditCriar.text():
+                aviso = QtWidgets.QMessageBox()
+                aviso.setIcon(QtWidgets.QMessageBox.Warning)
+                aviso.setText("Este canal já existe!")
+                aviso.setWindowTitle("Atenção")
+                aviso.exec_()
+                self.call.lineEditCriar.setText("")
+                self.call.lineEditCriar.setFocus()
+                break
         else:
-            canal = (self.call.lineEditCriar.text(), 1, "Welcome")
-            self.chat = TelaChat(self.app, self.cliente, canal)
-            pilha_telas.append(self)
-            self.call.hide()
+            if self.cliente.joinChannel(self.call.lineEditCriar.text()) == "nomeCanalInvalido":
+                aviso = QtWidgets.QMessageBox()
+                aviso.setIcon(QtWidgets.QMessageBox.Warning)
+                aviso.setText("Nome do canal inválido!")
+                aviso.setWindowTitle("Atenção")
+                aviso.exec_()
+                self.call.lineEditCriar.setText("")
+                self.call.lineEditCriar.setFocus()
+
+            else:
+                canal = (self.call.lineEditCriar.text(), 1, "Welcome")
+                self.chat = TelaChat(self.app, self.cliente, canal)
+                pilha_telas.append(self)
+                self.call.hide()
+
+        
+    def action_refresh(self):
+        confirmar = QtWidgets.QMessageBox()
+        confirmar.setIcon(QtWidgets.QMessageBox.Question)
+        confirmar.setWindowTitle("Confirmação")
+        confirmar.setText("Essa ação levará um tempo para ser concluída.\nDeseja realmete fazê-la?")
+        confirmar.addButton("Refresh", QtWidgets.QMessageBox.AcceptRole)
+        confirmar.addButton("Cancelar", QtWidgets.QMessageBox.RejectRole)
+        result = confirmar.exec()
+
+        if result == QtWidgets.QMessageBox.AcceptRole:
+            self.carregarTabela()
+            aviso = QtWidgets.QMessageBox()
+            aviso.setIcon(QtWidgets.QMessageBox.Information)
+            aviso.setText("Lista de canais atualizada com sucesso.")
+            aviso.setWindowTitle("Atualizada")
+            aviso.exec_()
