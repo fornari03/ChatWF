@@ -20,6 +20,8 @@ class TelaChat:
         self.call.lineEditMensagem.returnPressed.connect(self.action_enviar)
         self.call.pushButtonVoltar.clicked.connect(self.action_voltar)
 
+        self.call.textEditChat.setReadOnly(True)
+
         self.call.lineEditMensagem.setFocus()
         self.call.lineEditMensagem.setPlaceholderText("Mensagem")
 
@@ -62,7 +64,7 @@ class TelaChat:
         """)
 
 
-        self.atualiza_mensagens = QtCore.QTimer(self)
+        self.atualiza_mensagens = QtCore.QTimer()
         self.atualiza_mensagens.timeout.connect(self.receber)
         self.atualiza_mensagens.start(1000)
 
@@ -78,7 +80,7 @@ class TelaChat:
     def action_enviar(self):
         msg = self.call.lineEditMensagem.text()
         if msg.strip() != "": # verifica se digitou algo
-            self.cliente.sendPrivMsg(msg, self.channel)
+            self.cliente.sendPrivMsg(msg, self.channel[0])
             self.fancy_chat_print(msg)
         self.call.lineEditMensagem.setText("")
         self.call.lineEditMensagem.setFocus()
