@@ -33,6 +33,7 @@ class Cliente:
             if ans.find("PING ") != -1:
                 i = ans.find("PING ")
                 self._cliente.send(f"PONG {ans[i+5:ans[i+5:].find(' ')]}\r\n".encode())
+                ans = ans.replace("PING ", "")
 
 
         if ans.find("001") != -1:
@@ -168,7 +169,7 @@ class Cliente:
         msg = message.split(b' ')
         sender = msg[0].split(b'!')[0][1:]
         channel = msg[2]
-        text = msg[3][1:]
+        text = b' '.join(msg[3:])[1:]
 
         try:
             sender = sender.decode()
