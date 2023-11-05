@@ -14,18 +14,16 @@ class TelaEscolhaCanal:
         except:
             self.call=uic.loadUi(r"src\interfaces\ModeloListaChats.ui")
 
+        # configurações iniciais dos widgets da tela
         self.call.tableWidgetCanais.setColumnWidth(0, 130)
         self.call.tableWidgetCanais.setColumnWidth(1, 40)
         self.call.tableWidgetCanais.setColumnWidth(2, 205)
-
-        self.call.pushButtonEntrar.clicked.connect(self.action_entrar)
-        self.call.pushButtonCriar.clicked.connect(self.action_criar)
-        self.call.lineEditCriar.returnPressed.connect(self.action_criar)
-        self.call.pushButtonRefresh.clicked.connect(self.action_refresh)
         self.call.lineEditPesquisar.setPlaceholderText("Pesquise por um canal")
         self.call.lineEditCriar.setPlaceholderText("Nome do canal a ser criado")
         self.call.tableWidgetCanais.verticalHeader().setVisible(False)
+        self.call.tableWidgetCanais.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
 
+        # styleSheets dos widgets 
         self.call.tableWidgetCanais.setStyleSheet("""
             QTableWidget {
                 background-color: #FFFFFF;
@@ -48,8 +46,6 @@ class TelaEscolhaCanal:
             background-color: #E5E5E5;
             border: 0px solid #CCCCCC
         """)
-
-        self.call.tableWidgetCanais.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
 
         self.call.pushButtonVoltar.setStyleSheet("""
             QPushButton#pushButtonVoltar {
@@ -123,19 +119,27 @@ class TelaEscolhaCanal:
             }
         """)
 
+        # conexões de widgets com métodos
+        self.call.pushButtonEntrar.clicked.connect(self.action_entrar)
+        self.call.pushButtonCriar.clicked.connect(self.action_criar)
+        self.call.lineEditCriar.returnPressed.connect(self.action_criar)
+        self.call.pushButtonRefresh.clicked.connect(self.action_refresh)
         self.call.pushButtonEntrarPesquisa.clicked.connect(self.action_entrar_pesquisa)
         self.call.lineEditPesquisar.returnPressed.connect(self.action_entrar_pesquisa)
         self.call.pushButtonVoltar.clicked.connect(self.action_voltar)
 
+        # Thread para frequentemente receber as mensagens do servidor
         self.olhaServer = QtCore.QTimer()
         self.olhaServer.timeout.connect(self.receberMsg)
         self.olhaServer.start(1000)
 
         self.carregarTabela()
 
+        # mostra a tela
         self.call.show()
 
 
+    # carrega a lista de canais do servidor e mostra na tabela
     def carregarTabela(self):
         self.channels = self.cliente.getChannelList()
         self.call.tableWidgetCanais.setRowCount(len(self.channels))
@@ -144,8 +148,8 @@ class TelaEscolhaCanal:
             self.call.tableWidgetCanais.setItem(row, 1, QtWidgets.QTableWidgetItem(str(channel[1])))
             self.call.tableWidgetCanais.setItem(row, 2, QtWidgets.QTableWidgetItem(channel[2]))
 
-        
 
+    # tenta entrar no canal selecionado diretamente da tabela
     def action_entrar(self):
         linha = self.action_row_clicked()
         try:
@@ -179,6 +183,7 @@ class TelaEscolhaCanal:
             aviso.exec_()
 
 
+    # volta para a tela de autenticação
     def action_voltar(self):
         self.call.hide()
         self.olhaServer.stop()
@@ -186,16 +191,19 @@ class TelaEscolhaCanal:
         pilha_telas.pop().call.show()
 
 
+    # retorna o índice da linha selecionada
     def action_row_clicked(self):
         return self.call.tableWidgetCanais.currentRow()
     
 
+    # verifica se algum outro usuário mandou uma mensagem no chat
     def receberMsg(self):
         for msg in self.cliente.getMessages():
             if msg[0] == "privMsg" and self.chat != None and msg[1][2] == self.chat.channel[0]:
                 self.chat.receber(msg)
     
 
+    # tenta entrar no canal digitado
     def action_entrar_pesquisa(self):
         confirmar = QtWidgets.QMessageBox()
         confirmar.setIcon(QtWidgets.QMessageBox.Question)
@@ -231,6 +239,8 @@ class TelaEscolhaCanal:
                 self.call.lineEditCriar.setText("")
                 self.call.lineEditCriar.setFocus()
 
+
+    # tenta criar o canal com o nome digitado
     def action_criar(self):
         for channel in self.channels:
             if channel[0] == self.call.lineEditCriar.text():
@@ -259,6 +269,7 @@ class TelaEscolhaCanal:
                 self.call.hide()
 
         
+    # atualiza a tabela de canais
     def action_refresh(self):
         confirmar = QtWidgets.QMessageBox()
         confirmar.setIcon(QtWidgets.QMessageBox.Question)

@@ -143,10 +143,10 @@ padding: 5px;</string>
    <widget class="QLabel" name="labelNomeCanal">
     <property name="geometry">
      <rect>
-      <x>180</x>
-      <y>20</y>
+      <x>190</x>
+      <y>16</y>
       <width>131</width>
-      <height>16</height>
+      <height>20</height>
      </rect>
     </property>
     <property name="styleSheet">

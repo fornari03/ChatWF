@@ -7,26 +7,25 @@ from Pilha import *
 class TelaChat:
     def __init__(self, app, cliente, channel):
         self.app = app
-        self.channel = channel
-        # channel é uma tupla com (nome_canal, numero_usuarios, tópico)
         self.cliente = cliente
+        # channel é uma tupla com (nome_canal, numero_usuarios, tópico)
+        self.channel = channel
+        # usuarios é um dicionário para verificar as cores de cada user do chat
         self.usuarios = {}
+
         try:
             self.call=uic.loadUi(r"interfaces\ModeloChat.ui")
         except:
             self.call=uic.loadUi(r"src\interfaces\ModeloChat.ui")
 
-        self.call.pushButtonEnviar.clicked.connect(self.action_enviar)
-        self.call.lineEditMensagem.returnPressed.connect(self.action_enviar)
-        self.call.pushButtonVoltar.clicked.connect(self.action_voltar)
-
+        # configurações iniciais dos widgets da tela
         self.call.textEditChat.setReadOnly(True)
-
         self.call.lineEditMensagem.setFocus()
         self.call.lineEditMensagem.setPlaceholderText("Mensagem")
-
         self.call.labelNomeCanal.setText(self.channel[0])
 
+
+        # styleSheets dos widgets
         self.call.pushButtonVoltar.setStyleSheet("""
             QPushButton#pushButtonVoltar {
                 background-color: #0074D9;
@@ -63,15 +62,23 @@ class TelaChat:
             }
         """)
 
+        # conexões de widgets com métodos
+        self.call.pushButtonEnviar.clicked.connect(self.action_enviar)
+        self.call.lineEditMensagem.returnPressed.connect(self.action_enviar)
+        self.call.pushButtonVoltar.clicked.connect(self.action_voltar)
+
+        # mostra a tela
         self.call.show()
 
 
+    # print estilizado para o chat
     def fancy_chat_print(self, msg, user="Você"):
         horario = datetime.now().strftime("%H:%M")
         msg = f"<span style='color: {self.usuarios.get(user, 'green')};'>{user}:</span> {msg} <span style='color: gray; font-size: small;'>{horario}</span>"
         self.call.textEditChat.append(msg)
 
 
+    # envia uma mensagem no chat
     def action_enviar(self):
         msg = self.call.lineEditMensagem.text()
         if msg.strip() != "": # verifica se digitou algo
@@ -81,6 +88,7 @@ class TelaChat:
         self.call.lineEditMensagem.setFocus()
 
 
+    # recebe uma mensagem no chat
     def receber(self, mensagem):
         # atualiza o chat quando outro user manda msg
         if mensagem[1][0] not in self.usuarios.keys():
@@ -90,6 +98,7 @@ class TelaChat:
         self.fancy_chat_print(mensagem[1][1], mensagem[1][0])
 
     
+    # define a cor do usuário no chat
     def define_cor(self):
         while True:
             r = randint(0, 255)
@@ -100,6 +109,7 @@ class TelaChat:
                 return cor
 
     
+    # volta para a tela de escolher canal
     def action_voltar(self):
         self.call.hide()
         self.cliente.leaveChannel(self.channel[0])
