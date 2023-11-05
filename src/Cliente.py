@@ -16,10 +16,9 @@ class Cliente:
         except:
             self.open = False
 
-    # conecta com o servidor utilizando o usuario e o nick fornecido, e verifica se o nickname eh valido
     def autenticar(self, senha, nickname, nomeReal, modo: int):
+        # conecta com o servidor utilizando o usuario e o nick fornecido, e verifica se o nickname eh valido
         self.nickname = nickname
-        # tem que fazer ainda o try catch do timeoutError
         self._cliente.send(f"PASS {senha}\r\n".encode())
         self._cliente.send(f"NICK {nickname}\r\n".encode())
         self._cliente.send(f"USER {nickname} {modo} * :{nomeReal}\r\n".encode())
@@ -27,7 +26,7 @@ class Cliente:
         # verificar se o nickname eh valido
         # so podemos fazer essa verificacao depois do user pq nao tem mensagem de confirmacao do nick :|
         ans = self._cliente.recv(512).decode()
-        while ans[-2:] != "\r\n" or (ans.find("001") == -1 and ans.find("433") == -1 and ans.find("432") == -1 and ans.find("434") == -1 and ans.find("437") == -1):
+        while ans[-2:] != "\r\n" or (ans.find("001") == -1 and ans.find("433") == -1 and ans.find("432") == -1 and ans.find("436") == -1 and ans.find("437") == -1):
             ans += self._cliente.recv(1024).decode()
             # espaco pq pode ter palavras que tem ping no burst de boas vindas, entao a mensagem de PING sempre tem um espaco depois, por especificacao do protocolo
             if ans.find("PING ") != -1:
@@ -54,16 +53,20 @@ class Cliente:
                     return "nickError"
             except:
                 pass
-        elif ans.find("433") != -1 or ans.find("432") != -1 or ans.find("434") != -1 or ans.find("437") != -1:
+        elif ans.find("433") != -1 or ans.find("432") != -1 or ans.find("436") != -1 or ans.find("437") != -1:
+            # possiveis erros sobre o nickname que o servidor pode retornar
             self._cliente.close()
             self.open = False
             return "nickError"
         else:
+            # por algum motivo nao chegou a mensagem de bem vindo ao servidor, entao para garantir que n teve algum problema que n achamos, fechamos a conexao
             self._cliente.close()
             self.open = False
             return "semBurstWelcome"
 
     def getMessages(self):
+        # recebe todas as mensagens do servidor que estao disponiveis no socket, sem esperar chegar novas mensagens se nao tiver mensagens disponiveis
+        # e as passa pro metodo messageProcessing
         semMsg = False
         self._cliente.setblocking(False)
         messages = []
@@ -107,14 +110,12 @@ class Cliente:
             return self.recvPrivMsg(message)
         elif b'301 ' in message:
             return self.recvAway(message)
-        elif b'ERROR :Closing Link:' in message:
-            return "conexaoEncerradaPeloServidor"
         else:
             return "MsgIgnorada", None
 
     def getChannelList(self):
-        # tem que arrumar esse codigo ainda, acho que eh bom mexer em algumas coisas, como botar em uma lista
-        # e tbm a gente so retorna os canais que seu nome e descricao podem ser decodificados pra utf-8
+        # manda o comando de LIST para o servidor e retorna uma lista de tuplas, com cada tupla tendo nome do canal, numero de usuarios nele, e topico do canal
+        # a gente so retorna os canais que seu nome e descricao podem ser decodificados pra utf-8
         mensagens = []
         canais = []
 
@@ -122,6 +123,7 @@ class Cliente:
         self._cliente.send("LIST\r\n".encode())
         sleep(0.5)
 
+        # pequena rotina que fazemos para garantir que todas as mensagens recebidas sao colocadas na lista de mensagens
         ans = self._cliente.recv(1024)
         msgRecv = ans.split(b'\r\n')
         msgFalta = b''
@@ -161,11 +163,15 @@ class Cliente:
                     pass
         
         for msg in mensagens:
-            msg = msg.split()
-            for i in range(len(msg)):
-                if '#' in msg[i]:
-                    canais.append((msg[i], msg[i+1], " ".join(msg[i+2:])[1:]))
-                    break
+            if "PING " in msg:
+                i = msg.find("PING ")
+                self._cliente.send(f"PONG {msg[i+5:msg[i+5:].find(' ')]}\r\n".encode())
+            else:
+                msg = msg.split()
+                for i in range(len(msg)):
+                    if '#' in msg[i]:
+                        canais.append((msg[i], msg[i+1], " ".join(msg[i+2:])[1:]))
+                        break
         
         return canais
     
@@ -175,6 +181,7 @@ class Cliente:
         # a gente ve se a mensagem foi bem recebida no getMessages, que talvez venha uma mensagem de erro
 
     def recvPrivMsg(self, message: bytes):
+        # recebe uma mensagem de privMsg e a decodifica para string, deixando visivel ou detectando algum erro que nao conseguimos solucionar
         msg = message.split(b' ')
         sender = msg[0].split(b'!')[0][1:]
         channel = msg[2]
@@ -207,10 +214,12 @@ class Cliente:
         return "privMsg", [sender, text, channel]
 
     def recvPrivMsgError(self, message: bytes):
-        msg = message.split(b' ')
-        return "erroEnvioPrivMsg", msg[-1].decode()[1:]
+        # recebe um erro relacionado ao privMsg, e retorna qual foi
+        # tentamos encontrar o ':' ignorando o primeiro caracter para ignorar o possivel : que simboliza o prefixo da mensagem
+        return "erroEnvioPrivMsg", message[message[1:].find(b':'):].decode()
     
     def recvAway(self, message: bytes):
+        # recebe uma menagem de away e retorna quem esta away e qual msg ela deixou pra isso
         msg = message.split(b' ')
         try:
             return "userAway", [msg[-2].decode(), msg[-1].decode()[1:]]
@@ -230,16 +239,17 @@ class Cliente:
             return "userAway", [nick, awayMsg]          
 
     def sendPong(self, msgPing: bytes):
+        # responde a um PONG enviado pelo servidor com um PONG, com a chave fornecida no ping
         ping = msgPing.decode().split()
         for i in range(len(ping)):
             if ping[i] == "PING":
-                server = ping[i+1]
+                chave = ping[i+1]
                 break
         
-        self._cliente.send(f"PONG {server}\r\n".encode())
+        self._cliente.send(f"PONG {chave}\r\n".encode())
 
     def joinChannel(self, channel):
-        # channel ja tem que vir com o # ou &
+        # channel ja tem que vir com o # ou &, e nao pode ter algum caracter proibido (x07 eh o ctrl+G)
         if ("#" not in channel and "&" not in channel) or " " in channel or "," in channel or "\x07" in channel:
             return "nomeCanalInvalido"
         
@@ -247,12 +257,14 @@ class Cliente:
         # o servidor vai mandar um JOIN com o nickname do usuario de volta, mas ai a gente ve isso no message processing
 
     def leaveChannel(self, channel):
+        # channel ja tem que vir com o # ou &, e nao pode ter algum caracter proibido (x07 eh o ctrl+G)
         if ("#" not in channel and "&" not in channel) or " " in channel or "," in channel or "\x07" in channel:
             return "nomeCanalInvalido"
         
         self._cliente.send(f"PART {channel}\r\n".encode())
 
     def joinReply(self, message: bytes):
+        # recebe uma respodta que possui join ou responde a uma mensagem de join enviada, analisa e retorna que tipo de mensagem eh e seus dados
         msg = message.split(b' ')
         if b'JOIN ' in message:
             newUser = msg[0].split(b'!')[0][1:]     # pega so o nick da pessoa, tirando o : que ta no comeco da mensagem
@@ -262,8 +274,8 @@ class Cliente:
             except:
                 return "nonDecodableUsername", None
         elif b'332 ' in message:
-            channel = msg[-2]
-            topic = msg[-1]
+            channel = msg[2]
+            topic = message[message[1:].find(b':'):]
             try:
                 return "topic", [channel.decode(), topic[1:].decode()]
             except:
@@ -273,9 +285,15 @@ class Cliente:
                 return "topic", [channel.decode(), topic[1:].decode()]
         # talvez tenha que colocar mais um if pro caso de ser uma mensagem de quem ta no canal (codigo 353 pra RPL_NAMREPLY e 366 pra RPL_ENDOFNAMES)
         else:
-            return "joinError", [msg[-2].decode(), msg[-1].decode()]           # retorna a [canal, mensagem de erro]
+            # nao tenho certeza se essa parte esta funcionando corretamente, entao vou usar um try no caso de eu ter feito coisas mto erradas
+            try:
+                idxComecoCanal = message.find(b'#') + message.find(b'&') + 1                    # + 1 pois um desses find vai ser -1
+                return "joinError", [message[idxComecoCanal:message[idxComecoCanal:].find(b' ')].decode(), message[message[message[idxComecoCanal:].find(b' '):].find(b':') + 1:].decode()]
+            except:
+                return "joinError", None
         
     def recvPart(self, message: bytes):
+        # trata quando a mensagem recebida eh do tipo PART
         msg = message.split(b' ')
         user = msg[0].split(b'!')[0][1:]
         # msg[1] eh o 'PART'
@@ -297,6 +315,7 @@ class Cliente:
             return "part", [user.decode(), channel.decode(), partMsg.decode()]
 
     def quit(self):
+        # manda a mensagem quit pro servidor e fecha o socket que faz a conexao
         self._cliente.send("QUIT\r\n".encode())
         self._cliente.close()
         self.open = False
