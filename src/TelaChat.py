@@ -63,11 +63,6 @@ class TelaChat:
             }
         """)
 
-
-        self.atualiza_mensagens = QtCore.QTimer()
-        self.atualiza_mensagens.timeout.connect(self.receber)
-        self.atualiza_mensagens.start(1000)
-
         self.call.show()
 
 
@@ -86,15 +81,13 @@ class TelaChat:
         self.call.lineEditMensagem.setFocus()
 
 
-    def receber(self):
+    def receber(self, mensagem):
         # atualiza o chat quando outro user manda msg
-        for mensagem in self.cliente.getMessages():
-            if mensagem[0] == "privMsg":
-                if mensagem[1][0] not in self.usuarios.keys():
-                    cor = self.define_cor()
-                    self.usuarios[mensagem[1][0]] = cor
+        if mensagem[1][0] not in self.usuarios.keys():
+            cor = self.define_cor()
+            self.usuarios[mensagem[1][0]] = cor
 
-                self.fancy_chat_print(mensagem[1][1], mensagem[1][0])
+        self.fancy_chat_print(mensagem[1][1], mensagem[1][0])
 
     
     def define_cor(self):
@@ -109,7 +102,6 @@ class TelaChat:
     
     def action_voltar(self):
         self.call.hide()
-        self.atualiza_mensagens.stop()
         self.cliente.leaveChannel(self.channel[0])
         pilha_telas.pop().call.show()
 

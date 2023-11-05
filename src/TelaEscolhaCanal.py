@@ -8,6 +8,7 @@ class TelaEscolhaCanal:
     def __init__(self, app, cliente):
         self.app = app
         self.cliente = cliente
+        self.chat = None
         try:
             self.call=uic.loadUi(r"interfaces\ModeloListaChats.ui")
         except:
@@ -126,6 +127,10 @@ class TelaEscolhaCanal:
         self.call.lineEditPesquisar.returnPressed.connect(self.action_entrar_pesquisa)
         self.call.pushButtonVoltar.clicked.connect(self.action_voltar)
 
+        self.olhaServer = QtCore.QTimer()
+        self.olhaServer.timeout.connect(self.receberMsg)
+        self.olhaServer.start(1000)
+
         self.carregarTabela()
 
         self.call.show()
@@ -150,13 +155,13 @@ class TelaEscolhaCanal:
                 confirmar = QtWidgets.QMessageBox()
                 confirmar.setIcon(QtWidgets.QMessageBox.Question)
                 confirmar.setWindowTitle("Confirmação")
-                confirmar.setText(f"Deseja mesmo entrar no canal {canal}?")
+                confirmar.setText(f"Deseja mesmo entrar no canal {canal[0]}?")
                 confirmar.addButton("Sim", QtWidgets.QMessageBox.AcceptRole)
                 confirmar.addButton("Cancelar", QtWidgets.QMessageBox.RejectRole)
                 result = confirmar.exec()
 
                 if result == QtWidgets.QMessageBox.AcceptRole:
-                    self.cliente.joinChannel(canal)
+                    self.cliente.joinChannel(canal[0])
                     self.chat = TelaChat(self.app, self.cliente, canal)
                     pilha_telas.append(self)
                     self.call.hide()
@@ -176,12 +181,19 @@ class TelaEscolhaCanal:
 
     def action_voltar(self):
         self.call.hide()
+        self.olhaServer.stop()
         self.cliente.quit()
         pilha_telas.pop().call.show()
 
 
     def action_row_clicked(self):
         return self.call.tableWidgetCanais.currentRow()
+    
+
+    def receberMsg(self):
+        for msg in self.cliente.getMessages():
+            if msg[0] == "privMsg" and self.chat != None and msg[1][2] == self.chat.channel[0]:
+                self.chat.receber(msg)
     
 
     def action_entrar_pesquisa(self):

@@ -37,6 +37,9 @@ class Cliente:
 
 
         if ans.find("001") != -1:
+            # pegar o servidor que enviou a mensagem
+            self._server = ans.split("\r\n")[0].split()[0][1:]
+            # acha o fim do burst ou se teve algum problema de nick
             burst = ans[ans.find("001"):]
             while burst.find("End of /MOTD command") == -1 and burst[-2:] != "\r\n":
                 burst += self._cliente.recv(512).decode()
@@ -60,7 +63,6 @@ class Cliente:
             self.open = False
             return "semBurstWelcome"
 
-    # implementacao ruim, eh bom a gente ver as mensagens e analisar uma a uma no objeto, e tbm a posicao do try ta ruim
     def getMessages(self):
         semMsg = False
         self._cliente.setblocking(False)
@@ -124,32 +126,37 @@ class Cliente:
         if ans[-2:] != b'\r\n':
             msgFalta = msgRecv[-1]
             msgRecv.pop()
+        for i in msgRecv:
+            try:
+                mensagens.append(i.decode())
+            except:
+                pass
 
         while (ans.find(b':' + bytes(self._server, "utf-8") + b' 323') == -1):
-            for i in msgRecv:
-                try:
-                    mensagens.append(i.decode())
-                except:
-                    pass
             ans = self._cliente.recv(512)
             msgRecv = (msgFalta + ans).split(b'\r\n')
             msgFalta = b''
             if ans[-2:] != b'\r\n':
                 msgFalta = msgRecv[-1]
                 msgRecv.pop()
+            for i in msgRecv:
+                try:
+                    mensagens.append(i.decode())
+                except:
+                    pass
 
         while (ans[-2:] != b'\r\n'):
-            for i in msgRecv:
-                try:
-                    mensagens.append(i.decode())
-                except:
-                    pass
             ans = self._cliente.recv(512)
             msgRecv = (msgFalta + ans).split(b'\r\n')
             msgFalta = b''
             if ans[-2:] != b'\r\n':
                 msgFalta = msgRecv[-1]
                 msgRecv.pop()
+            for i in msgRecv:
+                try:
+                    mensagens.append(i.decode())
+                except:
+                    pass
         
         for msg in mensagens:
             msg = msg.split()
