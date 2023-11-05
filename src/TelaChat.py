@@ -109,6 +109,7 @@ class TelaChat:
     
     def action_voltar(self):
         self.call.hide()
-        self.cliente.leaveChannel(self.channel)
+        self.atualiza_mensagens.stop()
+        self.cliente.leaveChannel(self.channel[0])
         pilha_telas.pop().call.show()
 
