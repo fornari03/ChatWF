@@ -128,12 +128,12 @@ class TelaEscolhaCanal:
         self.call.lineEditPesquisar.returnPressed.connect(self.action_entrar_pesquisa)
         self.call.pushButtonVoltar.clicked.connect(self.action_voltar)
 
+        self.carregarTabela()
+
         # Thread para frequentemente receber as mensagens do servidor
         self.olhaServer = QtCore.QTimer()
         self.olhaServer.timeout.connect(self.receberMsg)
         self.olhaServer.start(1000)
-
-        self.carregarTabela()
 
         # mostra a tela
         self.call.show()
@@ -290,7 +290,9 @@ class TelaEscolhaCanal:
         result = confirmar.exec()
 
         if result == QtWidgets.QMessageBox.AcceptRole:
+            self.olhaServer.stop()
             self.carregarTabela()
+            self.olhaServer.start(1000)
             aviso = QtWidgets.QMessageBox()
             aviso.setIcon(QtWidgets.QMessageBox.Information)
             aviso.setText("Lista de canais atualizada com sucesso.")
