@@ -39,7 +39,7 @@ class TelaAutenticacao:
         """)
 
         # conexões de widgets com métodos
-        self.call.pushButtonConectar.clicked.connect(self.action_Conectar)
+        self.call.pushButtonConectar.clicked.connect(self.action_conectar)
 
         # mostra a tela e inicia a aplicação
         self.call.show()
@@ -73,7 +73,7 @@ class TelaAutenticacao:
 
 
     # tenta fazer a conexão com o servidor a partir dos dados fornecidos
-    def action_Conectar(self):
+    def action_conectar(self):
         if self.call.lineEditNickname.text().strip() == "":
             self.throw_message_box("Atenção", "Você deve preencher todos os campos!")
             self.call.lineEditNickname.setFocus()

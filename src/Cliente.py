@@ -26,7 +26,7 @@ class Cliente:
         # verificar se o nickname eh valido
         # so podemos fazer essa verificacao depois do user pq nao tem mensagem de confirmacao do nick :|
         ans = self._cliente.recv(512).decode()
-        while ans[-2:] != "\r\n" or (ans.find("001") == -1 and ans.find("433") == -1 and ans.find("432") == -1 and ans.find("434") == -1 and ans.find("437") == -1):
+        while ans[-2:] != "\r\n" or (ans.find("001") == -1 and ans.find("433") == -1 and ans.find("432") == -1 and ans.find("436") == -1 and ans.find("437") == -1):
             ans += self._cliente.recv(1024).decode()
             # espaco pq pode ter palavras que tem ping no burst de boas vindas, entao a mensagem de PING sempre tem um espaco depois, por especificacao do protocolo
             if ans.find("PING ") != -1:
@@ -53,7 +53,7 @@ class Cliente:
                     return "nickError"
             except:
                 pass
-        elif ans.find("433") != -1 or ans.find("432") != -1 or ans.find("434") != -1 or ans.find("437") != -1:
+        elif ans.find("433") != -1 or ans.find("432") != -1 or ans.find("436") != -1 or ans.find("437") != -1:
             # possiveis erros sobre o nickname que o servidor pode retornar
             self._cliente.close()
             self.open = False
