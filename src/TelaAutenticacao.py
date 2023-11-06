@@ -3,7 +3,6 @@ from TelaChat import *
 from Cliente import *
 from TelaEscolhaCanal import *
 from Pilha import *
-from testeInstancia import *
 
 
 class TelaAutenticacao:
